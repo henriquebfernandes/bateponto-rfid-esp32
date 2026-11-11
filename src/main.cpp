@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "clock/clock_sync.h"
 #include "config.h"
 #include "signaling/signaling.h"
 #include "wifi/wifi_manager.h"
@@ -12,7 +13,7 @@ bool setup_success = false;
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
-  setup_success = beginSignaling() && connectWiFi();
+  setup_success = beginSignaling() && connectWiFi() && syncClock();
   signalResult(setup_success);
 
   if (!setup_success) {
