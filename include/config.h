@@ -24,3 +24,10 @@ const unsigned long WEB_SESSION_TIMEOUT_MS = 30 * 60 * 1000UL;
 const int LED_GREEN_PIN = 2;
 const int LED_RED_PIN = 4;
 const int BUZZER_PIN = 15;
+
+// define os pinos do leitor RC522
+const int RFID_SCK_PIN = 18;
+const int RFID_MISO_PIN = 19;
+const int RFID_MOSI_PIN = 23;
+const int RFID_SS_PIN = 5;
+const int RFID_RST_PIN = 22;

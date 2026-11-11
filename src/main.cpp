@@ -3,6 +3,7 @@
 #include "clock/clock_sync.h"
 #include "config.h"
 #include "people/people_storage.h"
+#include "rfid/rfid_reader.h"
 #include "signaling/signaling.h"
 #include "web/web_server.h"
 #include "wifi/wifi_manager.h"
@@ -20,7 +21,8 @@ void setup() {
                    connectWiFi() &&
                    syncClock() &&
                    beginPeopleStorage() &&
-                   beginWebServer();
+                   beginWebServer() &&
+                   beginRfidReader();
   signalResult(setupSucceeded);
 
   if (!setupSucceeded) {
@@ -42,4 +44,5 @@ void loop() {
   }
 
   updateWebServer();
+  updateRfidReader();
 }
