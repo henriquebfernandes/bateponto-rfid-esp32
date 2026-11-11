@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+// delimita a página de login incorporada ao firmware
 extern const char loginPageStart[] asm("_binary_data_login_html_start");
 extern const char loginPageEnd[] asm("_binary_data_login_html_end");
 
@@ -18,6 +19,7 @@ int64_t sessionExpiresAtUs = 0;
 static_assert(sizeof(WEB_PASSWORD) > 1, "Configure uma senha para a página web.");
 
 void startSession(WebServer& server) {
+  // gera um token aleatório em hexadecimal e define quando a sessão expira
   constexpr char HEX_DIGITS[] = "0123456789abcdef";
   uint8_t token[TOKEN_BYTES];
   esp_fill_random(token, sizeof(token));
@@ -27,15 +29,18 @@ void startSession(WebServer& server) {
   }
   sessionExpiresAtUs = esp_timer_get_time() + WEB_SESSION_TIMEOUT_MS * 1000LL;
 
+  // envia o token ao navegador no cookie da sessão
   server.sendHeader("Set-Cookie", String(SESSION_COOKIE) + sessionToken +
                                      "; Path=/; HttpOnly; SameSite=Lax");
 }
 
 bool hasValidSession(WebServer& server) {
+  // verifica a validade da sessão antes de procurar o cookie
   if (esp_timer_get_time() >= sessionExpiresAtUs) {
     return false;
   }
 
+  // procura o cookie da sessão entre os cookies da requisição
   const String expectedCookie = String(SESSION_COOKIE) + sessionToken;
   const String cookies = server.header("Cookie");
   const int length = cookies.length();
@@ -64,6 +69,7 @@ void sendLoginPage(WebServer& server, bool invalidPassword) {
   const size_t pageSize = reinterpret_cast<uintptr_t>(loginPageEnd) -
                           reinterpret_cast<uintptr_t>(loginPageStart);
   server.sendHeader("Cache-Control", "no-store");
+  // insere a mensagem de erro no marcador da página quando a senha está incorreta
   if (invalidPassword) {
     String page(loginPageStart, pageSize);
     page.replace("<!-- mensagem de login -->", "<p>Senha incorreta.</p>");
@@ -78,6 +84,7 @@ void registerWebLogin(WebServer& server) {
   const char* headers[] = {"Cookie"};
   server.collectHeaders(headers, 1);
 
+  // exibe o formulário e cria uma sessão quando a senha confere
   server.on("/login", HTTP_GET, [&server]() {
     sendLoginPage(server, false);
   });

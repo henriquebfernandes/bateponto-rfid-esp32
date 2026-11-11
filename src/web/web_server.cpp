@@ -7,6 +7,7 @@
 #include "config.h"
 #include "web_auth.h"
 
+// delimita a página inicial incorporada ao firmware
 extern const char homePageStart[] asm("_binary_data_index_html_start");
 extern const char homePageEnd[] asm("_binary_data_index_html_end");
 
@@ -16,11 +17,13 @@ WebServer server(HTTP_PORT);
 }
 
 bool beginWebServer() {
+  // publica o nome local e anuncia o serviço HTTP
   if (!MDNS.begin(MDNS_HOSTNAME) || !MDNS.addService("http", "tcp", HTTP_PORT)) {
     Serial.println("Falha ao publicar o servidor web por mDNS.");
     return false;
   }
 
+  // registra o login e protege o acesso à página inicial
   registerWebLogin(server);
   server.on("/", HTTP_GET, []() {
     if (!requireWebSession(server)) {

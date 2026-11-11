@@ -1,24 +1,26 @@
 #pragma once
 
-//Configuração da Serial
+// configura a comunicação com o monitor serial
 const unsigned long SERIAL_BAUD_RATE = 115200;
 
-//Configuração do Wi-Fi
+// configura as credenciais e o tempo limite da conexão Wi-Fi
 const char WIFI_SSID[] = "SEU_SSID";
 const char WIFI_PASSWORD[] = "SUA_SENHA";
 const unsigned long WIFI_TIMEOUT_MS = 20000;
 
-// Configuração do relógio
+// configura o servidor NTP, o fuso horário e o tempo limite da sincronização
 const char NTP_SERVER[] = "pool.ntp.org";
-const char TIME_ZONE[] = "BRT3";  // Horário de Brasília (UTC-3), no formato POSIX.
+// define o fuso no formato POSIX, com BRT3 para o horário de Brasília
+const char TIME_ZONE[] = "BRT3";
 const unsigned long NTP_TIMEOUT_MS = 10000;
 
-// Configuração da página web
-const char MDNS_HOSTNAME[] = "bateponto";  // Domínio página web, ex: http://bateponto.local/
+// configura o endereço local, a senha e a duração da sessão
+// define o nome local usado no endereço bateponto.local
+const char MDNS_HOSTNAME[] = "bateponto";
 const char WEB_PASSWORD[] = "troque-esta-senha";
 const unsigned long WEB_SESSION_TIMEOUT_MS = 30 * 60 * 1000UL;
 
-//Configuração dos Pins
+// define os pinos dos LEDs e do buzzer
 const int LED_GREEN_PIN = 2;
 const int LED_RED_PIN = 4;
 const int BUZZER_PIN = 15;

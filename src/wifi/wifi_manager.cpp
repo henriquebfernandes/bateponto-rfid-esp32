@@ -8,21 +8,22 @@
 bool connectWiFi() {
   Serial.println("Conectando ao Wi-Fi...");
 
-  const unsigned long startTime = millis();
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  // inicia a conexão com o Wi-Fi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); 
 
-  bool connected = (WiFi.status() == WL_CONNECTED);
-  while (!connected && millis() - startTime < WIFI_TIMEOUT_MS) {
+  // aguarda a conexão até atingir o tempo limite
+  const unsigned long startedAt = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    if (millis() - startedAt >= WIFI_TIMEOUT_MS) {
+      WiFi.disconnect(true);
+      Serial.println("Falha ao conectar ao Wi-Fi.");
+      return false;
+    }
     delay(100);
-    connected = (WiFi.status() == WL_CONNECTED);
   }
 
-  if (connected) {
-    Serial.print("Wi-Fi conectado. IP: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    WiFi.disconnect(true);
-    Serial.println("Falha ao conectar ao Wi-Fi.");
-  }
-  return connected;
+  // exibe o IP após a conexão
+  Serial.print("Wi-Fi conectado. IP: ");
+  Serial.println(WiFi.localIP());
+  return true;
 }

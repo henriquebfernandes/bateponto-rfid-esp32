@@ -14,10 +14,12 @@ bool setup_success = false;
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
+  // interrompe a inicialização na primeira falha e sinaliza o resultado
   setup_success = beginSignaling() && connectWiFi() && syncClock() &&
                   beginWebServer();
   signalResult(setup_success);
 
+  // aguarda antes de reiniciar quando a inicialização falha
   if (!setup_success) {
     Serial.println("Setup falhou. Reiniciando...");
     delay(RESTART_DELAY_MS);
@@ -26,6 +28,7 @@ void setup() {
 }
 
 void loop() {
+  // atualiza a sinalização e atende requisições a cada ciclo
   updateSignaling();
   updateWebServer();
 }
