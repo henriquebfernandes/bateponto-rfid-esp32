@@ -11,7 +11,7 @@ bool connectWiFi() {
   const unsigned long startTime = millis();
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  boolean connected = (WiFi.status() == WL_CONNECTED);
+  bool connected = (WiFi.status() == WL_CONNECTED);
   while (!connected && millis() - startTime < WIFI_TIMEOUT_MS) {
     delay(100);
     connected = (WiFi.status() == WL_CONNECTED);

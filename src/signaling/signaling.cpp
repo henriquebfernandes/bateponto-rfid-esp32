@@ -5,7 +5,7 @@
 #include "config.h"
 
 namespace {
-const unsigned long SIGNAL_DURATION_MS = 1000;
+const unsigned long SIGNAL_DURATION_MS = 500;
 const unsigned int SUCCESS_TONE_HZ = 2000;
 const unsigned int FAILURE_TONE_HZ = 1000;
 
