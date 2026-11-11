@@ -2,33 +2,44 @@
 
 #include "clock/clock_sync.h"
 #include "config.h"
+#include "people/people_storage.h"
 #include "signaling/signaling.h"
 #include "web/web_server.h"
 #include "wifi/wifi_manager.h"
 
 namespace {
 constexpr unsigned long RESTART_DELAY_MS = 5000;
-bool setup_success = false;
+bool setupSucceeded = false;
 }
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
-  // interrompe a inicialização na primeira falha e sinaliza o resultado
-  setup_success = beginSignaling() && connectWiFi() && syncClock() &&
-                  beginWebServer();
-  signalResult(setup_success);
+  // para na primeira falha e sinaliza o resultado
+  setupSucceeded = beginSignaling() &&
+                   connectWiFi() &&
+                   syncClock() &&
+                   beginPeopleStorage() &&
+                   beginWebServer();
+  signalResult(setupSucceeded);
 
-  // aguarda antes de reiniciar quando a inicialização falha
-  if (!setup_success) {
-    Serial.println("Setup falhou. Reiniciando...");
-    delay(RESTART_DELAY_MS);
-    ESP.restart();
+  if (!setupSucceeded) {
+    Serial.println("Falha na inicialização. Aguardando reinício.");
   }
 }
 
 void loop() {
-  // atualiza a sinalização e atende requisições a cada ciclo
+  // atualiza a sinalização mesmo enquanto aguarda o reinício
   updateSignaling();
+  if (!setupSucceeded) {
+    // começa a contar na primeira passagem pelo loop após a falha
+    static const unsigned long restartWaitStartedAt = millis();
+    if (millis() - restartWaitStartedAt >= RESTART_DELAY_MS) {
+      ESP.restart();
+    }
+    delay(1);
+    return;
+  }
+
   updateWebServer();
 }

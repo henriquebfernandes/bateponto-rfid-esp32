@@ -5,8 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bate-ponto RFID</title>
 </head>
-<!-- exibe a página inicial após a validação da sessão -->
 <body>
   <h1>Bate-ponto RFID</h1>
+  <h2>Pessoas</h2>
+  <!-- envia o nome para cadastrar uma pessoa -->
+  <form action="/people" method="post">
+    <label>Nome <input name="name" required></label>
+    <button type="submit">Cadastrar</button>
+  </form>
+  <!-- recebe os formulários de renomeação -->
+  <ul>
+    <!-- lista de pessoas -->
+  </ul>
 </body>
 </html>

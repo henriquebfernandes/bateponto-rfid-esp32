@@ -6,10 +6,7 @@
 
 #include "config.h"
 #include "web_auth.h"
-
-// delimita a página inicial incorporada ao firmware
-extern const char homePageStart[] asm("_binary_data_index_html_start");
-extern const char homePageEnd[] asm("_binary_data_index_html_end");
+#include "web_people.h"
 
 namespace {
 constexpr uint16_t HTTP_PORT = 80;
@@ -23,16 +20,9 @@ bool beginWebServer() {
     return false;
   }
 
-  // registra o login e protege o acesso à página inicial
+  // registra as rotas antes de iniciar o servidor
   registerWebLogin(server);
-  server.on("/", HTTP_GET, []() {
-    if (!requireWebSession(server)) {
-      return;
-    }
-    const size_t pageSize = reinterpret_cast<uintptr_t>(homePageEnd) -
-                            reinterpret_cast<uintptr_t>(homePageStart);
-    server.send_P(200, "text/html; charset=utf-8", homePageStart, pageSize);
-  });
+  registerWebPeople(server);
   server.begin();
 
   Serial.printf("Página web disponível em http://%s.local/\n", MDNS_HOSTNAME);
