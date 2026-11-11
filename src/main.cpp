@@ -3,6 +3,7 @@
 #include "clock/clock_sync.h"
 #include "config.h"
 #include "signaling/signaling.h"
+#include "web/web_server.h"
 #include "wifi/wifi_manager.h"
 
 namespace {
@@ -13,7 +14,8 @@ bool setup_success = false;
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
-  setup_success = beginSignaling() && connectWiFi() && syncClock();
+  setup_success = beginSignaling() && connectWiFi() && syncClock() &&
+                  beginWebServer();
   signalResult(setup_success);
 
   if (!setup_success) {
@@ -25,4 +27,5 @@ void setup() {
 
 void loop() {
   updateSignaling();
+  updateWebServer();
 }
