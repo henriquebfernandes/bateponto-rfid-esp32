@@ -6,10 +6,12 @@
 
 namespace {
 const unsigned long SIGNAL_DURATION_MS = 500;
-const unsigned int SUCCESS_TONE_HZ = 2000;
-const unsigned int FAILURE_TONE_HZ = 1000;
+const unsigned long BEEP_DURATION_MS = 100;
+const unsigned long BEEP_GAP_MS = 100;
+const unsigned long SECOND_BEEP_START_MS = BEEP_DURATION_MS + BEEP_GAP_MS;
 
 bool signalActive = false;
+bool repeatBeep = false;
 unsigned long signalStartedAt = 0;
 }
 
@@ -27,22 +29,34 @@ bool beginSignaling() {
 }
 
 void signalResult(bool success) {
-  // aciona o LED e o som correspondentes ao resultado
+  // acende o LED correspondente e inicia o primeiro bip
   digitalWrite(LED_GREEN_PIN, success ? HIGH : LOW);
   digitalWrite(LED_RED_PIN, success ? LOW : HIGH);
-  tone(BUZZER_PIN, success ? SUCCESS_TONE_HZ : FAILURE_TONE_HZ);
+  digitalWrite(BUZZER_PIN, HIGH);
 
-  // marca o início do intervalo de sinalização
+  // programa o segundo bip apenas em caso de falha
+  repeatBeep = !success;
   signalStartedAt = millis();
   signalActive = true;
 }
 
 void updateSignaling() {
+  if (!signalActive) {
+    return;
+  }
+
+  const unsigned long elapsed = millis() - signalStartedAt;
+
+  // mantém o buzzer ligado apenas durante os bipes
+  const bool buzzerOn = elapsed < BEEP_DURATION_MS ||
+                        (repeatBeep && elapsed >= SECOND_BEEP_START_MS &&
+                         elapsed < SECOND_BEEP_START_MS + BEEP_DURATION_MS);
+  digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
+
   // desliga as saídas ao fim do intervalo sem bloquear o loop
-  if (signalActive && millis() - signalStartedAt >= SIGNAL_DURATION_MS) {
+  if (elapsed >= SIGNAL_DURATION_MS) {
     digitalWrite(LED_GREEN_PIN, LOW);
     digitalWrite(LED_RED_PIN, LOW);
-    noTone(BUZZER_PIN);
     signalActive = false;
   }
 }

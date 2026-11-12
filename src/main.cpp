@@ -49,6 +49,7 @@ void loop() {
     return;
   }
 
+  updateCardEnrollment();
   updateWebServer();
 
   // encaminha a leitura ao cadastro ativo ou ao registro de ponto

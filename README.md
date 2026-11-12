@@ -36,6 +36,8 @@ Uma pessoa pode ter zero, um ou vários cartões. Cada cartão pertence a no má
 4. Se estiver livre, o primeiro cartão lido é associado à pessoa selecionada.
 5. O modo de cadastro termina após a primeira leitura ou quando o prazo expira.
 
+O ESP32 emite um bip ao salvar o vínculo e dois se o cadastro falhar ou expirar.
+
 ## 7. Registro Automático de Ponto
 1. O RC522 identifica o cartão apresentado.
 2. O sistema verifica se o cartão está associado a uma pessoa e se o cooldown permite um novo registro.
@@ -53,8 +55,8 @@ O cooldown define o intervalo mínimo entre registros consecutivos da mesma pess
 A fonte é definida na criação e fica disponível apenas para leitura. O valor é `Leitor RFID` nos registros automáticos e `Manual` nos registros criados pela página web.
 
 ## 9. Sinalização
-- Em caso de sucesso, o ESP32 acende o LED verde e emite um som de confirmação.
-- Em caso de falha, acende o LED vermelho e emite um som distinto.
+- Em caso de sucesso, o ESP32 acende o LED verde e emite um bip.
+- Em caso de falha, acende o LED vermelho e emite dois bipes.
 - Os LEDs e o buzzer ficam ativos por um breve intervalo.
 
 ## 10. Armazenamento

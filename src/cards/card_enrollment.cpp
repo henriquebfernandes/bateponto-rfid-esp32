@@ -5,10 +5,16 @@
 #include "card_storage.h"
 #include "config.h"
 #include "../people/people_storage.h"
+#include "../signaling/signaling.h"
 
 namespace {
 CardEnrollment enrollment;
 int64_t expiresAtUs = 0;
+
+void finishCardEnrollment(CardEnrollmentStatus status) {
+  enrollment.status = status;
+  signalResult(status == CardEnrollmentStatus::linked);
+}
 }
 
 bool startCardEnrollment(const String& personId) {
@@ -21,11 +27,15 @@ bool startCardEnrollment(const String& personId) {
   return true;
 }
 
-const CardEnrollment& getCardEnrollment() {
+void updateCardEnrollment() {
   if (enrollment.status == CardEnrollmentStatus::waiting &&
       esp_timer_get_time() >= expiresAtUs) {
-    enrollment.status = CardEnrollmentStatus::expired;
+    finishCardEnrollment(CardEnrollmentStatus::expired);
   }
+}
+
+const CardEnrollment& getCardEnrollment() {
+  updateCardEnrollment();
   return enrollment;
 }
 
@@ -38,20 +48,19 @@ bool consumeEnrollmentCard(const String& uid) {
   Person person;
   const StorageResult result = findPerson(enrollment.personId, person);
   if (result != StorageResult::ok) {
-    enrollment.status = result == StorageResult::notFound
-                            ? CardEnrollmentStatus::personNotFound
-                            : CardEnrollmentStatus::storageError;
+    finishCardEnrollment(result == StorageResult::notFound ? CardEnrollmentStatus::personNotFound
+                                                          : CardEnrollmentStatus::storageError);
     return true;
   }
   switch (linkCard(uid, person.id)) {
     case CardLinkResult::linked:
-      enrollment.status = CardEnrollmentStatus::linked;
+      finishCardEnrollment(CardEnrollmentStatus::linked);
       break;
     case CardLinkResult::alreadyLinked:
-      enrollment.status = CardEnrollmentStatus::alreadyLinked;
+      finishCardEnrollment(CardEnrollmentStatus::alreadyLinked);
       break;
     case CardLinkResult::storageError:
-      enrollment.status = CardEnrollmentStatus::storageError;
+      finishCardEnrollment(CardEnrollmentStatus::storageError);
       break;
   }
   return true;

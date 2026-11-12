@@ -18,5 +18,6 @@ struct CardEnrollment {
 };
 
 bool startCardEnrollment(const String& personId);
+void updateCardEnrollment();
 const CardEnrollment& getCardEnrollment();
 bool consumeEnrollmentCard(const String& uid);
