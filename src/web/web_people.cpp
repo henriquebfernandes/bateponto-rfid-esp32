@@ -4,6 +4,7 @@
 
 #include "../people/people_storage.h"
 #include "web_auth.h"
+#include "web_html.h"
 
 // delimita a página inicial incorporada ao firmware
 extern const char homePageStart[] asm("_binary_data_index_html_start");
@@ -11,16 +12,6 @@ extern const char homePageEnd[] asm("_binary_data_index_html_end");
 
 namespace {
 constexpr char LIST_MARKER[] = "<!-- lista de pessoas -->";
-constexpr char TEXT_TYPE[] = "text/plain; charset=utf-8";
-
-String escapeHtml(String value) {
-  // preserva os caracteres especiais do nome no campo de edição
-  value.replace("&", "&amp;");
-  value.replace("<", "&lt;");
-  value.replace(">", "&gt;");
-  value.replace("\"", "&quot;");
-  return value;
-}
 
 void sendPersonRow(WebServer& server, const Person& person) {
   // vincula o formulário de renomeação ao identificador da pessoa
@@ -29,7 +20,12 @@ void sendPersonRow(WebServer& server, const Person& person) {
   row += person.id;
   row += "\"><label>Nome <input name=\"name\" required value=\"";
   row += escapeHtml(person.name);
-  row += "\"></label> <button type=\"submit\">Renomear</button></form></li>";
+  row += "\"></label> <button type=\"submit\">Renomear</button></form>";
+  row += String("<a href=\"/cards?person=") + person.id + "\">Cartões</a>";
+  row += String("<form action=\"/people/delete\" method=\"post\" "
+                "onsubmit=\"return confirm('Excluir esta pessoa, seus cartões e registros?')\">"
+                "<input type=\"hidden\" name=\"id\" value=\"") + person.id +
+         "\"><button type=\"submit\">Excluir pessoa</button></form></li>";
   server.sendContent(row);
 }
 
@@ -40,7 +36,7 @@ void sendPeoplePage(WebServer& server) {
   const String page(homePageStart, pageSize);
   const int listStart = page.indexOf(LIST_MARKER);
   if (listStart < 0) {
-    server.send(500, TEXT_TYPE, "Não foi possível listar as pessoas.");
+    server.send(500, WEB_TEXT_TYPE, "Não foi possível listar as pessoas.");
     return;
   }
 
@@ -59,7 +55,7 @@ void sendPeoplePage(WebServer& server) {
     sendPersonRow(server, person);
   });
   if (result == PeopleListResult::unavailable) {
-    server.send(500, TEXT_TYPE, "Não foi possível listar as pessoas.");
+    server.send(500, WEB_TEXT_TYPE, "Não foi possível listar as pessoas.");
     return;
   }
 
@@ -81,18 +77,17 @@ void sendSaveResult(WebServer& server, PersonResult result) {
   // volta à lista após salvar ou informa a falha
   switch (result) {
     case PersonResult::saved:
-      server.sendHeader("Location", "/");
-      server.send(303);
+      redirectWeb(server, "/");
       break;
     case PersonResult::invalidName:
-      server.send(400, TEXT_TYPE, String("Informe um nome válido de até ") +
+      server.send(400, WEB_TEXT_TYPE, String("Informe um nome válido de até ") +
                   PERSON_NAME_MAX_BYTES + " bytes.");
       break;
     case PersonResult::notFound:
-      server.send(404, TEXT_TYPE, "Pessoa não encontrada.");
+      server.send(404, WEB_TEXT_TYPE, "Pessoa não encontrada.");
       break;
     case PersonResult::storageError:
-      server.send(500, TEXT_TYPE, "Não foi possível salvar a pessoa.");
+      server.send(500, WEB_TEXT_TYPE, "Não foi possível salvar a pessoa.");
       break;
   }
 }
@@ -113,6 +108,22 @@ void registerWebPeople(WebServer& server) {
   server.on("/people/rename", HTTP_POST, [&server]() {
     if (requireWebSession(server)) {
       sendSaveResult(server, renamePerson(server.arg("id"), server.arg("name")));
+    }
+  });
+  server.on("/people/delete", HTTP_POST, [&server]() {
+    if (!requireWebSession(server)) {
+      return;
+    }
+    switch (deletePerson(server.arg("id"))) {
+      case StorageResult::ok:
+        redirectWeb(server, "/");
+        break;
+      case StorageResult::notFound:
+        server.send(404, WEB_TEXT_TYPE, "Pessoa não encontrada.");
+        break;
+      case StorageResult::error:
+        server.send(500, WEB_TEXT_TYPE, "Não foi possível concluir a exclusão. Tente novamente.");
+        break;
     }
   });
 }

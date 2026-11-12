@@ -1,5 +1,9 @@
 #include <Arduino.h>
 
+#include "attendance/attendance_storage.h"
+#include "attendance/rfid_attendance.h"
+#include "cards/card_enrollment.h"
+#include "cards/card_storage.h"
 #include "clock/clock_sync.h"
 #include "config.h"
 #include "people/people_storage.h"
@@ -21,6 +25,8 @@ void setup() {
                    connectWiFi() &&
                    syncClock() &&
                    beginPeopleStorage() &&
+                   beginCardStorage() &&
+                   beginAttendanceStorage() &&
                    beginWebServer() &&
                    beginRfidReader();
   signalResult(setupSucceeded);
@@ -44,5 +50,10 @@ void loop() {
   }
 
   updateWebServer();
-  updateRfidReader();
+
+  // encaminha a leitura ao cadastro ativo ou ao registro de ponto
+  String uid;
+  if (readRfidCard(uid) && !consumeEnrollmentCard(uid)) {
+    signalResult(registerRfidAttendance(uid));
+  }
 }

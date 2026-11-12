@@ -1,4 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
+
 bool beginRfidReader();
-void updateRfidReader();
+bool readRfidCard(String& uid);

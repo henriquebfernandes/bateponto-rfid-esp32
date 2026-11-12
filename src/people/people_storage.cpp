@@ -8,14 +8,14 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
-#include <cstring>
+
+#include "../attendance/attendance_storage.h"
+#include "../cards/card_storage.h"
 
 namespace {
-constexpr char MOUNT_PATH[] = "/littlefs";
 constexpr char PARTITION_LABEL[] = "spiffs";
 constexpr char PEOPLE_DIRECTORY[] = "/people";
 constexpr char TEMP_PATH[] = "/people/.pending";
-constexpr size_t ID_LENGTH = 16;
 
 bool isPartitionBlank(const esp_partition_t* partition) {
   // procura dados gravados em toda a partição
@@ -28,12 +28,6 @@ bool isPartitionBlank(const esp_partition_t* partition) {
     }
   }
   return true;
-}
-
-bool validId(const char* id) {
-  // impede que o identificador altere o caminho do arquivo
-  return strlen(id) == ID_LENGTH &&
-         strspn(id, "0123456789abcdef") == ID_LENGTH;
 }
 
 bool validName(const String& name) {
@@ -55,25 +49,13 @@ PersonResult savePerson(const String& path, String& name) {
     return PersonResult::invalidName;
   }
 
-  // usa um arquivo temporário para preservar o cadastro se a gravação falhar
-  const String stagingPath = String(MOUNT_PATH) + TEMP_PATH;
-  FILE* file = fopen(stagingPath.c_str(), "wb");
-  if (!file) {
-    return PersonResult::storageError;
-  }
-  const bool written = fwrite(name.c_str(), 1, name.length(), file) == name.length();
-  const bool closed = fclose(file) == 0;
-  if (!written || !closed || !LittleFS.rename(TEMP_PATH, path.c_str())) {
-    LittleFS.remove(TEMP_PATH);
-    return PersonResult::storageError;
-  }
-  return PersonResult::saved;
+  return writeStoredText(path, TEMP_PATH, name) ? PersonResult::saved : PersonResult::storageError;
 }
 }
 
 bool beginPeopleStorage() {
   // formata apenas quando a montagem falha e a partição está vazia
-  if (!LittleFS.begin(false, MOUNT_PATH, 10, PARTITION_LABEL)) {
+  if (!LittleFS.begin(false, STORAGE_MOUNT_PATH, 10, PARTITION_LABEL)) {
     const esp_partition_t* partition = esp_partition_find_first(
         ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, PARTITION_LABEL);
     if (!partition) {
@@ -84,14 +66,14 @@ bool beginPeopleStorage() {
       Serial.println("Falha ao montar o LittleFS. A partição contém dados ou não pôde ser lida.");
       return false;
     }
-    if (!LittleFS.format() || !LittleFS.begin(false, MOUNT_PATH, 10, PARTITION_LABEL)) {
+    if (!LittleFS.format() || !LittleFS.begin(false, STORAGE_MOUNT_PATH, 10, PARTITION_LABEL)) {
       Serial.println("Falha ao inicializar o LittleFS na partição vazia.");
       return false;
     }
   }
 
   // prepara o diretório dos cadastros após montar o LittleFS
-  if (!LittleFS.exists(PEOPLE_DIRECTORY) && !LittleFS.mkdir(PEOPLE_DIRECTORY)) {
+  if (!ensureStorageDirectory(PEOPLE_DIRECTORY)) {
     Serial.println("Falha ao criar o diretório de pessoas.");
     return false;
   }
@@ -99,8 +81,30 @@ bool beginPeopleStorage() {
   return true;
 }
 
+bool isPersonId(const char* id) {
+  return isHexId(id, PERSON_ID_LENGTH, "0123456789abcdef");
+}
+
+StorageResult findPerson(const String& id, Person& person) {
+  if (!isPersonId(id.c_str())) {
+    return StorageResult::notFound;
+  }
+
+  char name[PERSON_NAME_MAX_BYTES + 1];
+  const String path = String(PEOPLE_DIRECTORY) + '/' + id;
+  const StorageResult result = readStoredText(path, name, sizeof(name));
+  if (result != StorageResult::ok) {
+    return result;
+  }
+  if (!validName(name)) {
+    return StorageResult::error;
+  }
+  person = {id, name};
+  return StorageResult::ok;
+}
+
 PeopleListResult visitPeople(const std::function<void(const Person&)>& visit) {
-  const String directoryPath = String(MOUNT_PATH) + PEOPLE_DIRECTORY;
+  const String directoryPath = String(STORAGE_MOUNT_PATH) + PEOPLE_DIRECTORY;
   DIR* directory = opendir(directoryPath.c_str());
   if (!directory) {
     return PeopleListResult::unavailable;
@@ -117,25 +121,13 @@ PeopleListResult visitPeople(const std::function<void(const Person&)>& visit) {
       }
       break;
     }
-    if (entry->d_type == DT_DIR || !validId(entry->d_name)) {
+    if (entry->d_type == DT_DIR || !isPersonId(entry->d_name)) {
       continue;
     }
 
     // lê um cadastro por vez e segue para o próximo se houver falha
-    const String path = String(PEOPLE_DIRECTORY) + '/' + entry->d_name;
-    File file = LittleFS.open(path);
-    char name[PERSON_NAME_MAX_BYTES + 1];
-    const size_t length = file.size();
-    if (length == 0 || length > PERSON_NAME_MAX_BYTES ||
-        file.read(reinterpret_cast<uint8_t*>(name), length) != length) {
-      result = PeopleListResult::incomplete;
-      continue;
-    }
-    file.close();
-
-    name[length] = '\0';
-    const Person person{String(entry->d_name), String(name, length)};
-    if (!validName(person.name)) {
+    Person person;
+    if (findPerson(entry->d_name, person) != StorageResult::ok) {
       result = PeopleListResult::incomplete;
       continue;
     }
@@ -147,7 +139,7 @@ PeopleListResult visitPeople(const std::function<void(const Person&)>& visit) {
 
 PersonResult createPerson(String name) {
   // gera um identificador que ainda não está em uso
-  char id[ID_LENGTH + 1];
+  char id[PERSON_ID_LENGTH + 1];
   String path;
   do {
     const unsigned long high = esp_random();
@@ -161,7 +153,7 @@ PersonResult createPerson(String name) {
 
 PersonResult renamePerson(const String& id, String name) {
   // localiza o cadastro pelo identificador antes de atualizar o nome
-  if (!validId(id.c_str())) {
+  if (!isPersonId(id.c_str())) {
     return PersonResult::notFound;
   }
   const String path = String(PEOPLE_DIRECTORY) + '/' + id;
@@ -169,4 +161,18 @@ PersonResult renamePerson(const String& id, String name) {
     return PersonResult::notFound;
   }
   return savePerson(path, name);
+}
+
+StorageResult deletePerson(const String& id) {
+  Person person;
+  const StorageResult result = findPerson(id, person);
+  if (result != StorageResult::ok) {
+    return result;
+  }
+
+  // mantém a pessoa até concluir a remoção de todos os dados associados
+  if (!removePersonCards(id) || !removePersonAttendance(id)) {
+    return StorageResult::error;
+  }
+  return removeStoredFile(String(PEOPLE_DIRECTORY) + '/' + id);
 }

@@ -31,3 +31,7 @@ const int RFID_MISO_PIN = 19;
 const int RFID_MOSI_PIN = 23;
 const int RFID_SS_PIN = 5;
 const int RFID_RST_PIN = 22;
+
+// define o prazo de cadastro e o intervalo mínimo entre pontos da mesma pessoa
+const unsigned long CARD_ENROLLMENT_TIMEOUT_MS = 15000;
+const unsigned long ATTENDANCE_COOLDOWN_MS = 10000;
