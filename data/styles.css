@@ -1,0 +1,166 @@
+:root {
+  --color-background: #f8f9f7;
+  --color-surface: #fff;
+  --color-text: #202823;
+  --color-primary: #265942;
+  --color-border: #78847c;
+  --color-divider: #d7ded8;
+  --color-danger: #973328;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: 1rem/1.5 Inter, system-ui, sans-serif;
+}
+
+main {
+  max-inline-size: 52rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2rem);
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2 {
+  line-height: 1.2;
+}
+
+h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.75rem, 1.4rem + 2vw, 2.5rem);
+}
+
+h2 {
+  margin: 1.75rem 0 .75rem;
+  font-size: 1.25rem;
+}
+
+a {
+  color: var(--color-primary);
+  text-underline-offset: .2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+form {
+  display: grid;
+  justify-items: start;
+  gap: .75rem;
+}
+
+form + form {
+  margin-block-start: .75rem;
+}
+
+form p {
+  margin: 0;
+}
+
+label {
+  display: grid;
+  gap: .25rem;
+  inline-size: min(100%, 22rem);
+}
+
+input:not([type="hidden"]),
+select,
+button {
+  min-block-size: 2.75rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+input:not([type="hidden"]),
+select {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+main > form > button {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.danger,
+[role="alert"] {
+  color: var(--color-danger);
+}
+
+.danger {
+  border-color: var(--color-danger);
+  background: var(--color-surface);
+}
+
+.inline-form,
+li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.inline-form {
+  align-items: center;
+}
+
+.inline-form > label {
+  flex: 1 1 10rem;
+  max-inline-size: 22rem;
+}
+
+.inline-form > button {
+  align-self: end;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  align-items: end;
+  padding-block: .75rem;
+  border-block-end: 1px solid var(--color-divider);
+}
+
+li > .inline-form {
+  flex: 1 1 22rem;
+  min-inline-size: 0;
+}
+
+li > a {
+  padding-block: .625rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  inline-size: 100%;
+  min-inline-size: 30rem;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: .625rem .75rem;
+  border-block-end: 1px solid var(--color-divider);
+  text-align: start;
+}

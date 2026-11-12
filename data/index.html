@@ -4,19 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bate-ponto RFID</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>Bate-ponto RFID</h1>
-  <p><a href="/records">Registros de ponto</a></p>
-  <h2>Pessoas</h2>
-  <!-- envia o nome para cadastrar uma pessoa -->
-  <form action="/people" method="post">
-    <label>Nome <input name="name" required></label>
-    <button type="submit">Cadastrar</button>
-  </form>
-  <!-- recebe as ações de gerenciamento de cada pessoa -->
-  <ul>
-    <!-- lista de pessoas -->
-  </ul>
+  <main>
+    <h1>Bate-ponto RFID</h1>
+    <nav><a href="/records">Registros de ponto</a></nav>
+    <h2>Pessoas</h2>
+    <!-- envia o nome para cadastrar uma pessoa -->
+    <form class="inline-form" action="/people" method="post">
+      <label>Nome <input name="name" required></label>
+      <button type="submit">Cadastrar</button>
+    </form>
+    <!-- recebe as ações de gerenciamento de cada pessoa -->
+    <ul role="list">
+      <!-- lista de pessoas -->
+    </ul>
+  </main>
 </body>
 </html>

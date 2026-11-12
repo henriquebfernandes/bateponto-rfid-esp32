@@ -72,7 +72,7 @@ void sendLoginPage(WebServer& server, bool invalidPassword) {
   // insere a mensagem de erro no marcador da página quando a senha está incorreta
   if (invalidPassword) {
     String page(loginPageStart, pageSize);
-    page.replace("<!-- mensagem de login -->", "<p>Senha incorreta.</p>");
+    page.replace("<!-- mensagem de login -->", "<p role=\"alert\">Senha incorreta.</p>");
     server.send(401, "text/html; charset=utf-8", page);
     return;
   }

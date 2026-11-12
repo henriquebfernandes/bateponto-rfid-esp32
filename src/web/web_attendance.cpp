@@ -85,12 +85,15 @@ void sendAttendancePage(WebServer& server) {
   if (count == 0) {
     server.sendContent("<p>Nenhum registro nesta página.</p>");
   } else {
-    server.sendContent("<table><thead><tr><th>Pessoa</th><th>Tipo</th><th>Data e hora</th>"
-                       "<th>Fonte</th><th>Ações</th></tr></thead><tbody>");
+    server.sendContent("<div class=\"table-scroll\" role=\"region\" "
+                       "aria-label=\"Registros de ponto\" tabindex=\"0\">"
+                       "<table><thead><tr><th scope=\"col\">Pessoa</th><th scope=\"col\">Tipo</th>"
+                       "<th scope=\"col\">Data e hora</th><th scope=\"col\">Fonte</th>"
+                       "<th scope=\"col\">Ações</th></tr></thead><tbody>");
     for (size_t index = 0; index < std::min(count, RECORDS_PER_PAGE); ++index) {
       sendAttendanceRow(server, records[index]);
     }
-    server.sendContent("</tbody></table>");
+    server.sendContent("</tbody></table></div>");
   }
   if (count > RECORDS_PER_PAGE) {
     server.sendContent(String("<p><a href=\"/records?before=") + records[RECORDS_PER_PAGE - 1].id +
@@ -112,7 +115,7 @@ void sendAttendanceForm(WebServer& server, const AttendanceRecord& record) {
     server.sendContent(String("<input type=\"hidden\" name=\"id\" value=\"") + record.id + "\">");
   }
 
-  server.sendContent("<p><label>Pessoa <select name=\"person\" required>"
+  server.sendContent("<label>Pessoa <select name=\"person\" required>"
                      "<option value=\"\">Selecione uma pessoa</option>");
   bool hasPeople = false;
   const PeopleListResult people = visitPeople([&](const Person& person) {
@@ -121,7 +124,7 @@ void sendAttendanceForm(WebServer& server, const AttendanceRecord& record) {
                        (person.id == record.personId ? " selected" : "") + ">" +
                        escapeHtml(person.name) + "</option>");
   });
-  server.sendContent("</select></label></p>");
+  server.sendContent("</select></label>");
   if (people != PeopleListResult::complete) {
     server.sendContent("<p>Não foi possível ler toda a lista de pessoas.</p>");
   } else if (!hasPeople) {
@@ -129,13 +132,13 @@ void sendAttendanceForm(WebServer& server, const AttendanceRecord& record) {
   }
 
   const String dateTime = editing ? formatLocalDateTime(record.timestampMs) : "";
-  server.sendContent(String("<p><label>Tipo <select name=\"type\"><option value=\"entry\"") +
+  server.sendContent(String("<label>Tipo <select name=\"type\"><option value=\"entry\"") +
                      (record.type == AttendanceType::entry ? " selected" : "") +
                      ">Entrada</option><option value=\"exit\"" +
                      (record.type == AttendanceType::exit ? " selected" : "") +
-                     ">Saída</option></select></label></p>"
-                     "<p><label>Data e hora <input type=\"datetime-local\" name=\"dateTime\" "
-                     "step=\"1\" value=\"" + dateTime + "\" required></label></p>");
+                     ">Saída</option></select></label>"
+                     "<label>Data e hora <input type=\"datetime-local\" name=\"dateTime\" "
+                     "step=\"1\" value=\"" + dateTime + "\" required></label>");
   if (editing) {
     server.sendContent(String("<p>Fonte: ") + sourceLabel(record.source) + "</p>");
   }
@@ -143,7 +146,7 @@ void sendAttendanceForm(WebServer& server, const AttendanceRecord& record) {
   if (editing) {
     server.sendContent(String("<form action=\"/records/delete\" method=\"post\">"
                               "<input type=\"hidden\" name=\"id\" value=\"") + record.id +
-                       "\"><button type=\"submit\">Excluir registro</button></form>");
+                       "\"><button class=\"danger\" type=\"submit\">Excluir registro</button></form>");
   }
   server.sendContent("<p><a href=\"/records\">Voltar aos registros</a></p>");
   sendHtmlEnd(server);

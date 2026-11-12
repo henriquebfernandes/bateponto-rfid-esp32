@@ -10,6 +10,10 @@
 #include "web_cards.h"
 #include "web_people.h"
 
+// delimita a folha de estilos incorporada ao firmware
+extern const char stylesheetStart[] asm("_binary_data_styles_css_start");
+extern const char stylesheetEnd[] asm("_binary_data_styles_css_end");
+
 namespace {
 constexpr uint16_t HTTP_PORT = 80;
 WebServer server(HTTP_PORT);
@@ -23,6 +27,11 @@ bool beginWebServer() {
   }
 
   // registra as rotas antes de iniciar o servidor
+  server.on("/styles.css", HTTP_GET, []() {
+    const size_t size = reinterpret_cast<uintptr_t>(stylesheetEnd) -
+                        reinterpret_cast<uintptr_t>(stylesheetStart);
+    server.send_P(200, "text/css; charset=utf-8", stylesheetStart, size);
+  });
   registerWebLogin(server);
   registerWebPeople(server);
   registerWebCards(server);

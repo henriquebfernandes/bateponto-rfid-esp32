@@ -26,15 +26,16 @@ void sendCardsPage(WebServer& server, const Person& person) {
   server.sendContent(String("<p>Pessoa: ") + escapeHtml(person.name) + "</p>"
                      "<form action=\"/cards/enrollment\" method=\"post\">"
                      "<input type=\"hidden\" name=\"person\" value=\"" + person.id + "\">"
-                     "<button type=\"submit\">Adicionar cartão</button></form><ul>");
+                     "<button type=\"submit\">Adicionar cartão</button></form><ul role=\"list\">");
 
   bool hasCards = false;
   const bool complete = visitPersonCards(person.id, [&](const char* uid) {
     hasCards = true;
-    server.sendContent(String("<li><form action=\"/cards/unlink\" method=\"post\">") + uid +
-                       " <input type=\"hidden\" name=\"person\" value=\"" + person.id + "\">"
+    server.sendContent(String("<li><form class=\"inline-form\" action=\"/cards/unlink\" method=\"post\">"
+                              "<code>") + uid + "</code>"
+                       "<input type=\"hidden\" name=\"person\" value=\"" + person.id + "\">"
                        "<input type=\"hidden\" name=\"uid\" value=\"" + uid + "\">"
-                       "<button type=\"submit\">Desvincular</button></form></li>");
+                       "<button class=\"danger\" type=\"submit\">Desvincular</button></form></li>");
   });
   if (!complete) {
     server.sendContent("<li>Não foi possível ler todos os cartões.</li>");

@@ -15,7 +15,7 @@ constexpr char LIST_MARKER[] = "<!-- lista de pessoas -->";
 
 void sendPersonRow(WebServer& server, const Person& person) {
   // vincula o formulário de renomeação ao identificador da pessoa
-  String row = "<li><form action=\"/people/rename\" method=\"post\">"
+  String row = "<li><form class=\"inline-form\" action=\"/people/rename\" method=\"post\">"
                "<input type=\"hidden\" name=\"id\" value=\"";
   row += person.id;
   row += "\"><label>Nome <input name=\"name\" required value=\"";
@@ -25,7 +25,7 @@ void sendPersonRow(WebServer& server, const Person& person) {
   row += String("<form action=\"/people/delete\" method=\"post\" "
                 "onsubmit=\"return confirm('Excluir esta pessoa, seus cartões e registros?')\">"
                 "<input type=\"hidden\" name=\"id\" value=\"") + person.id +
-         "\"><button type=\"submit\">Excluir pessoa</button></form></li>";
+         "\"><button class=\"danger\" type=\"submit\">Excluir pessoa</button></form></li>";
   server.sendContent(row);
 }
 

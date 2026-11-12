@@ -4,15 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login | Bate-ponto RFID</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>Bate-ponto RFID</h1>
-  <!-- mensagem de login -->
-  <!-- envia a senha para validação e abertura da sessão -->
-  <form action="/login" method="post">
-    <label for="password">Senha</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required>
-    <button type="submit">Entrar</button>
-  </form>
+  <main>
+    <h1>Bate-ponto RFID</h1>
+    <!-- mensagem de login -->
+    <!-- envia a senha para validação e abertura da sessão -->
+    <form action="/login" method="post">
+      <label>Senha
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Entrar</button>
+    </form>
+  </main>
 </body>
 </html>
